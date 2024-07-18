@@ -28,7 +28,6 @@
     "jsx": "react-jsx",
     "allowJs": true, // 자바스크립트 파일 허용
     // "checkJs": true, // 자바스크립트 파일도 타입체크가 가능하다
-
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,

@@ -1,6 +1,7 @@
 import InputError from "@/components/InputError"
 import Submit from "@/components/Submit"
 import { userState } from "@/recoil/user/atoms"
+import { ApiResWithValidation, SingleItem, User } from "@/types"
 import { useMutation } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { useNavigate } from "react-router-dom"
@@ -35,8 +36,16 @@ export default function Login() {
     setError,
   } = useForm<LoginForm>()
 
-  const { mutate: checkLogin } = useMutation({
-    mutationFn(formData) {
+  //TDATA : mutation 리턴 에러(resData)
+  //TError : 발생하는 에러의 타입
+  //TVariable : mutationFn 인자값의 타입(formData)
+
+  const { mutate: checkLogin } = useMutation<
+    ApiResWithValidation<SingleItem<User>, LoginForm>,
+    Error,
+    LoginForm
+  >({
+    mutationFn(formData: LoginForm) {
       return login(formData)
     },
     onSuccess(resData) {
@@ -46,13 +55,13 @@ export default function Login() {
           _id: resData.item._id,
           name: resData.item.name,
           profile: resData.item.profileImage,
-          accessToken: resData.item.token.accessToken,
-          refreshToken: resData.item.token.refreshToken,
+          accessToken: resData.item.token!.accessToken,
+          refreshToken: resData.item.token!.refreshToken,
         })
         navigate("/")
       } else {
         // API서버에서 에러 응답
-        if (resData.errors) {
+        if ("errors" in resData) {
           resData.errors.forEach((error) =>
             setError(error.path, { message: error.msg })
           )
@@ -77,7 +86,7 @@ export default function Login() {
           </h2>
         </div>
 
-        <form onSubmit={handleSubmit(checkLogin)}>
+        <form onSubmit={handleSubmit((formData) => checkLogin(formData))}>
           <div className="mb-4">
             <label
               className="block text-gray-700 dark:text-gray-200 mb-2"
@@ -117,7 +126,7 @@ export default function Login() {
               placeholder="비밀번호를 입력하세요"
               className="w-full px-3 py-2 border rounded-lg focus:outline-none focus:border-orange-400 dark:bg-gray-700"
               {...register("password", {
-                requirsed: "비밀번호 입력하세요",
+                required: "비밀번호 입력하세요",
               })}
             />
             <InputError target={errors.password} />
